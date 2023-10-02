@@ -1,0 +1,34 @@
+main#chat {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	width: 100%;
+}
+main > #top {
+	position: relative;
+	margin: 0.3rem 0.5rem 0.5rem 0.5rem;
+	border-bottom: 1px solid black;
+	text-align: center;
+}
+#top h1 {font-size: 2rem;}
+#top img {
+	max-width: 30px;
+	position: absolute;
+	left: 0;
+}
+main > #mid {
+	justify-self: end;
+	flex-grow: 1;
+	margin: 0 0.5rem;
+}
+main > #bot {
+	margin: 0.5rem 0.5rem 0.3rem 0.5rem;
+}
+main > #bot > form {
+	position: relative;
+	text-align: center;
+}
+main > #bot img {
+	position: absolute;
+	max-height: 37px;
+}
