@@ -21,7 +21,7 @@ const authenticateTok:M = (req, res, next) => {
 	jwt.verify(tok, process.env.TOK_SECRET!, (err, dTok) => {
 		if (err) {
 			console.log(err)
-			return res.sendStatus(403).send("Session Expired");
+			return res.status(403).send("Session Expired");
 		}
 		console.log("TOK_VERIFY", dTok);
 		req.tok = dTok as {id:string, iat: number, exp: number};

@@ -35,6 +35,15 @@ userRouter.post("/login", bodyIsString, valLogin, async (req, res) => {
 		}
 });
 
+userRouter.get("/logout", (_, res) => {
+		try {
+			res.cookie("tok", "", {expires: new Date(0)});
+			res.sendStatus(200);
+		}catch(e) {
+			res.status(500).json({error: handleErr(e)});
+		}
+});
+
 /* Auth routes */
 
 userRouter.get("/auth", authenticateTok, async (req, res) => {

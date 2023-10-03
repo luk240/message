@@ -69,6 +69,10 @@ export async function authLoader(cd:boolean = false) {
 	}
 }
 
+export function logout() {
+	return fetch(url+"user/logout", {mode: "cors", credentials: "include"});
+}
+
 export async function errLoader() {
 	console.log("errLoader");
 		const res = await fetch(url+"noexist", {

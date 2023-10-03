@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import "./sidebar.css";
 
 export default function Sidebar() {
@@ -33,7 +34,7 @@ export default function Sidebar() {
 			</nav>
 			<div id="manage">
 				<button>Friends</button>
-				<button>Profile</button>
+				<Link to="/profile"><button>Profile</button></Link>
 			</div>
 		</div>
 	);

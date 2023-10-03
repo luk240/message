@@ -19,6 +19,7 @@ export default function Login() {
 	return (
 		<div>
 			{window.location.search == "?~" && <p>You must first login.</p>}
+			{window.location.search == "?y" && <p>Successfully logged out.</p>}
 			<h1>Login</h1>
 			<form onSubmit={handleSubmit}>
 				<label>Username/Email:

@@ -24,8 +24,6 @@ const router = createBrowserRouter([
 			{
 				path: "profile",
 				element: <Profile/>,
-				loader: (l) => {console.log("LOADER", l); return errLoader();},
-				errorElement: <Err/>,
 			}
 		]
 	},
