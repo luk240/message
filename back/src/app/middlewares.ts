@@ -72,8 +72,8 @@ const valReg:M = async (req, res, next) => {
 
 
 		// Check if unique (not pushing to "err" to avoid DB parse)
-		if (await db.collection<IUser>(table).findOne({"username": username})) throw {message: ["Username already in use"]};
-		if (email && await db.collection<IUser>(table).findOne({"email": email})) throw {message: ["Email already in use"]};
+		if (await db.collection(table).findOne({"username": username})) throw {message: ["Username already in use"]};
+		if (email && await db.collection(table).findOne({"email": email})) throw {message: ["Email already in use"]};
 
 		req.body = {username, email, password};
 		next();
