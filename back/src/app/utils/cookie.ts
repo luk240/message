@@ -5,6 +5,7 @@ export function setCookie(k:string, v:string, res:Response) {
 	res.cookie(k, v, {sameSite: "lax", httpOnly: true, expires: new Date(Date.now() + 3600000*24 * 7)})
 }
 
+// Note: req.cookies={} if not using cookieParser, we could do req.cookies = c_obj
 export function getCookies<T>(cookies:string) {
 	const c_arr = cookies.replace(/\s/g, "").split(";")
 

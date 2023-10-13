@@ -18,8 +18,7 @@ export default function ChatWindow() {
 	const [msg, setMsg] = useState<WsSend>({type: "msg"} as WsSend);
 	const [msgLog, setMsgLog] = useState<WsGet[]>([{type: "msg", name: "XX", content: "XX"}]);
 	const ws = useRef<WebSocket_|null>(null);
-	const [wsTimeout, setWsTimeout] = useState<boolean>(false);
-	const wsHeartbeat = 30000 + 1000; // 1s delay
+	const wsHeartbeat = 30000 + 2000; // +delay
 	const divMain = useRef<HTMLDivElement>(null);
 	const shouldScroll = useRef(true);
 	console.log("MSGLOG:", msgLog);
@@ -28,40 +27,41 @@ export default function ChatWindow() {
 		if (!ws.current) return;
 		if (ws.current.pingTimeout) clearTimeout(ws.current.pingTimeout);
 
-		ws.current.pingTimeout = setTimeout(() => {
-			// Logic to handle no res from server
+		ws.current.pingTimeout = setTimeout(() => { // Logic to handle no res from server
 			ws.current!.close(1000, "timeout");
+			wsInit(ws.current); // Try reconn once before 1min interval
 			
-			// <reconn once before interval>()
 			const reconn = setInterval(() => {
-				console.log("server not responding", ws);
-				if (ws.current?.readyState != ws.current?.OPEN) setWsTimeout((t) => !t); // needs improvement
-				else clearInterval(reconn);
-			}, 59000); // Try reconnect every 1min
+				if (ws.current?.readyState != ws.current?.OPEN) {
+					console.log("WS server not responding", ws);
+					wsInit(ws.current);
+				}
+				else clearInterval(reconn); // If reconn fn will run 1/1 more time. Alt do clearInterval "ws.reconn" on "onopen"
+			}, 59000);
 		}, wsHeartbeat);
 
 		ws.current.send(JSON.stringify({type: "pong"}));
 	}
 
-	useEffect(() => {
-		console.log("USE EFFECT");
-		if (ws.current) ws.current.close(1000, "reconn");
-		ws.current = new WebSocket(import.meta.env._WS) as WebSocket_;
-		ws.current.onopen = () => {
+	function wsInit(WS:WebSocket_|null) {
+		console.log(WS)
+		if (WS) WS.close(1000, "reconn");
+		WS = new WebSocket(import.meta.env._WS) as WebSocket_;
+		WS.onopen = () => {
 			console.log("'WS connection open'");
 			const sysMsg = {type: "sys", content: "{User} connected"};
-			ws.current!.send(JSON.stringify(sysMsg));
+			WS!.send(JSON.stringify(sysMsg));
 		}
-		ws.current.onclose = (e) => {
+		WS.onclose = (e) => {
 			console.log("WS onclose:", e.reason);
-			//if (ws.current?.pingTimeout) clearTimeout(ws.current.pingTimeout);
-			//ws.current = null;
+			//if (ws?.pingTimeout) clearTimeout(ws.pingTimeout);
+			//ws = null;
 		}
-		ws.current.onerror = (e) => {
+		WS.onerror = (e) => {
 			console.log("WS onerror:", e);
 			//handleErr(e)
 		}
-		ws.current.onmessage = (e) => {
+		WS.onmessage = (e) => {
 			console.log("WS-onmessage", e.data);
 			try {
 				var data:WsGet = JSON.parse(e.data);
@@ -72,7 +72,7 @@ export default function ChatWindow() {
 			}
 
 			switch (data.type) {
-				case "ping":
+				case "ping": // Wss sends ping on interval, we res with pong. If wss dont receive pong it kills us & if we dont get ping we reconn.
 					heartbeat();
 				break;
 				case "msg": case "sys":
@@ -86,13 +86,18 @@ export default function ChatWindow() {
 				break;
 			}
 		}
+		ws.current = WS;
+	}
+
+	useEffect(() => {
+		wsInit(ws.current);
 		return () => {
 			if (ws.current) {
 				ws.current.close(1000, "return");
 				ws.current = null;
 			}
 		}
-		}, [wsTimeout]);
+		}, []);
 
 	useEffect(() => {
 		if (divMain.current) {
@@ -120,7 +125,7 @@ export default function ChatWindow() {
 		<main id="chat">
 			<div id="top">
 				<img alt="settings" title="Settings" src="/icon/cog.svg"/>
-				<h1>Chat Room <sup>{` (${wsTimeout ? "offline" : "online"})`}</sup></h1>
+				<h1>Chat Room <sup>{` (${false ? "offline" : "online"})`}</sup></h1>
 			</div>
 			<div id="mid" ref={divMain}>
 				<p>Messages displays here...</p>

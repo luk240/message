@@ -1,6 +1,6 @@
 import { Server } from "http";
 import { WebSocket, WebSocketServer } from "ws";
-import { WsGet, WsSend } from "./types/interfaces";
+import { WsGet, WsSend } from "./types/index";
 
 const wss = new WebSocketServer({noServer: true});
 const heartbeat = 30000;
@@ -43,8 +43,8 @@ wss.on("connection", (ws:WebSocket, req) => {
 		}
 
 		if (data.type == "pong") { // If we receive pong conn is alive
-			console.log("Pong");
 			ws.isAlive = true;
+			return; // Dont send "pong" to client, can be seen in browser "ws res log"
 		}
 		// Send to all clients
 		wss.clients.forEach((c) => {
