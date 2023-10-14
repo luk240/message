@@ -23,7 +23,7 @@ export default function ChatWindow() {
 	const shouldScroll = useRef(true);
 	console.log("MSGLOG:", msgLog);
 
-	function heartbeat() {
+	function heartbeat(isPing:Boolean = true) {
 		if (!ws.current) return;
 		if (ws.current.pingTimeout) clearTimeout(ws.current.pingTimeout);
 
@@ -40,7 +40,7 @@ export default function ChatWindow() {
 			}, 59000);
 		}, wsHeartbeat);
 
-		ws.current.send(JSON.stringify({type: "pong"}));
+		if (isPing) ws.current.send(JSON.stringify({type: "pong"}));
 	}
 
 	function wsInit(WS:WebSocket_|null) {
@@ -49,13 +49,13 @@ export default function ChatWindow() {
 		WS = new WebSocket(import.meta.env._WS) as WebSocket_;
 		WS.onopen = () => {
 			console.log("'WS connection open'");
+			heartbeat(false); // Start timeout in case conn drops before first ping(30s)
 			const sysMsg = {type: "sys", content: "{User} connected"};
 			WS!.send(JSON.stringify(sysMsg));
 		}
 		WS.onclose = (e) => {
 			console.log("WS onclose:", e.reason);
-			//if (ws?.pingTimeout) clearTimeout(ws.pingTimeout);
-			//ws = null;
+			//if (WS?.pingTimeout) clearTimeout(WS.pingTimeout);
 		}
 		WS.onerror = (e) => {
 			console.log("WS onerror:", e);

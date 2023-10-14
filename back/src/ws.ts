@@ -1,14 +1,15 @@
 import { Server } from "http";
 import { WebSocket, WebSocketServer } from "ws";
 import { WsGet, WsSend } from "./types/index";
+import { wsTokAuth } from "./app/middlewares";
 
 const wss = new WebSocketServer({noServer: true});
 const heartbeat = 30000;
 
-function sockerPreErr(e:Error) {
+function socketPreErr(e:Error) {
 	console.log(e);
 }
-function sockerPostErr(e:Error) {
+function socketPostErr(e:Error) {
 	console.log(e);
 }
 function ping(ws:WebSocket) {
@@ -16,12 +17,19 @@ function ping(ws:WebSocket) {
 }
 
 export default function wsInit(server:Server) {
-	// Add server to wss
+	// Add server to wss | HTTP handshake before upgrade
 	server.on("upgrade", (req, socket, head) => {
-		socket.on("error", sockerPreErr);
-		//socket.setEncoding("utf-8")
+		socket.on("error", socketPreErr);
+		console.log("ws handshake:", req.headers);
+
+		if (!wsTokAuth(req)) {
+			socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+			socket.destroy();
+			return;
+		}
+
 		wss.handleUpgrade(req, socket, head, (ws) => {
-			socket.removeListener("error", sockerPreErr);
+			socket.removeListener("error", socketPreErr);
 			wss.emit("connection", ws, req);
 		});
 	});
@@ -30,7 +38,7 @@ export default function wsInit(server:Server) {
 wss.on("connection", (ws:WebSocket, req) => {
 	console.log("WS-client connected");
 	ws.isAlive = true;
-	ws.on("error", sockerPostErr);
+	ws.on("error", socketPostErr);
 
 	ws.on("message", (rData, isBinary) => {
 		try {

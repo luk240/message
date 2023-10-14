@@ -3,6 +3,7 @@ import { db } from "../db";
 import jwt from "jsonwebtoken";
 import { getCookies } from "./utils/cookie";
 import handleErr from "./utils/error";
+import { IncomingMessage } from "http";
 
 type M = (...args:[Request, Response, NextFunction]) => void;
 
@@ -12,7 +13,7 @@ Code:
 	const authHeader = req.headers["authorization"];
 	const token = authHeader && authHeader.split(" ")[1]; */
 const authenticateTok:M = (req, res, next) => {
-	const c = req.headers.cookie
+	const c = req.headers.cookie;
 	if (!c) return res.status(401).send("No cookies");
 
 	const tok = getCookies<{tok:string}>(c).tok;
@@ -20,13 +21,36 @@ const authenticateTok:M = (req, res, next) => {
 
 	jwt.verify(tok, process.env.TOK_SECRET!, (err, dTok) => {
 		if (err) {
-			console.log(err)
+			console.log(err);
 			return res.status(403).send("Session Expired");
 		}
 		console.log("TOK_VERIFY", dTok);
 		req.tok = dTok as {id:string, iat: number, exp: number};
 		next();
 	})
+}
+
+function wsTokAuth(req:IncomingMessage) {
+	var tok:string|null|boolean = "";
+	const c = req.headers.cookie;
+
+	if (c) tok = getCookies<{tok:string}>(c).tok;
+	/*if (!tok && req.url) { // No-cookie requests (not implemented)
+			const url = new URL(req.url, `ws://${req.headers.host}`)
+			tok = url.searchParams.get("t")
+	}*/
+	if (!tok) return false;
+
+	jwt.verify(tok, process.env.TOK_SECRET!, (err, dTok) => {
+		if (err) {
+			console.log(err);
+			return tok = false;
+		}
+		console.log("WS_TOK_VERIFY", dTok);
+		tok = true;
+	});
+
+	return tok;
 }
 
 const bodyIsString:M = async (req, res, next) => {
@@ -100,4 +124,4 @@ const valLogin:M = async (req, res, next) => {
 	}
 }
 
-export {authenticateTok, valReg, valLogin, bodyIsString};
+export {authenticateTok, wsTokAuth, valReg, valLogin, bodyIsString};
