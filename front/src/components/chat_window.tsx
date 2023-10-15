@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react"
 import "./chat_window.css"
+import { useLocation, useParams } from "react-router-dom";
 
 interface WebSocket_ extends WebSocket {
 	pingTimeout: ReturnType<typeof setTimeout>;
@@ -14,54 +15,69 @@ interface WsSend extends WsGet {
 	conversation_id: string;
 }
 
+let ws:WebSocket_|null = null;
+const wsHeartbeat = 30000 + 2000; // +delay
+const msgInput:WsSend = {type: "msg"} as WsSend;
+let shouldScroll = true;
+
 export default function ChatWindow() {
-	const [msg, setMsg] = useState<WsSend>({type: "msg"} as WsSend);
-	const [msgLog, setMsgLog] = useState<WsGet[]>([{type: "msg", name: "XX", content: "XX"}]);
-	const ws = useRef<WebSocket_|null>(null);
-	const wsHeartbeat = 30000 + 2000; // +delay
+	let [msgLog, setMsgLog] = useState<WsGet[]>([{type: "msg", name: "XX", content: "XX"}]);
 	const divMain = useRef<HTMLDivElement>(null);
-	const shouldScroll = useRef(true);
+	const getThread = useParams().thread || "";
+	const thread = useRef(getThread);
 	console.log("MSGLOG:", msgLog);
 
-	function heartbeat(isPing:Boolean = true) {
-		if (!ws.current) return;
-		if (ws.current.pingTimeout) clearTimeout(ws.current.pingTimeout);
+	// Change ws thread
+	if (thread.current !== getThread) {
+		thread.current = getThread;
+		if (ws) ws.close(1000, "newid");
+	}
 
-		ws.current.pingTimeout = setTimeout(() => { // Logic to handle no res from server
-			ws.current!.close(1000, "timeout");
-			wsInit(ws.current); // Try reconn once before 1min interval
+	function heartbeat(isPing:Boolean = true) {
+		if (!ws) return;
+		if (ws.pingTimeout) clearTimeout(ws.pingTimeout);
+
+		ws.pingTimeout = setTimeout(() => { // Logic to handle no res from server
+			ws!.close(1000, "timeout"); // Try reconn once before 1min interval
 			
 			const reconn = setInterval(() => {
-				if (ws.current?.readyState != ws.current?.OPEN) {
+				if (ws?.readyState != ws?.OPEN) {
 					console.log("WS server not responding", ws);
-					wsInit(ws.current);
+					wsInit();
 				}
 				else clearInterval(reconn); // If reconn fn will run 1/1 more time. Alt do clearInterval "ws.reconn" on "onopen"
 			}, 59000);
 		}, wsHeartbeat);
 
-		if (isPing) ws.current.send(JSON.stringify({type: "pong"}));
+		if (isPing) ws.send(JSON.stringify({type: "pong"}));
 	}
 
-	function wsInit(WS:WebSocket_|null) {
-		console.log(WS)
-		if (WS) WS.close(1000, "reconn");
-		WS = new WebSocket(import.meta.env._WS) as WebSocket_;
-		WS.onopen = () => {
+	function wsInit() {
+		console.log("wsInit:", ws)
+		if (ws) ws.close(1000, "reconn");
+		ws = new WebSocket(import.meta.env._WS + thread.current) as WebSocket_;
+		ws.onopen = () => {
 			console.log("'WS connection open'");
 			heartbeat(false); // Start timeout in case conn drops before first ping(30s)
 			const sysMsg = {type: "sys", content: "{User} connected"};
-			WS!.send(JSON.stringify(sysMsg));
+			ws!.send(JSON.stringify(sysMsg));
 		}
-		WS.onclose = (e) => {
+		ws.onclose = (e) => {
 			console.log("WS onclose:", e.reason);
-			//if (WS?.pingTimeout) clearTimeout(WS.pingTimeout);
+			if (ws) {
+				clearTimeout(ws.pingTimeout);
+				switch(e.reason) {
+					case "newid": msgLog = [];
+					case "newid": case "timeout":
+						wsInit(); break;
+				}
+			}
 		}
-		WS.onerror = (e) => {
+		ws.onerror = (e) => {
 			console.log("WS onerror:", e);
 			//handleErr(e)
 		}
-		WS.onmessage = (e) => {
+		ws.onmessage = (e) => {
 			console.log("WS-onmessage", e.data);
 			try {
 				var data:WsGet = JSON.parse(e.data);
@@ -71,30 +87,31 @@ export default function ChatWindow() {
 				return;
 			}
 
-			switch (data.type) {
+			switch(data.type) {
 				case "ping": // Wss sends ping on interval, we res with pong. If wss dont receive pong it kills us & if we dont get ping we reconn.
 					heartbeat();
 				break;
 				case "msg": case "sys":
 					if (divMain.current) { // Handle scroll befor setting msg
 						const el = divMain.current;
-						shouldScroll.current = el.scrollHeight - (el.scrollTop+el.clientHeight) < 2;
+						shouldScroll = el.scrollHeight - (el.scrollTop+el.clientHeight) < 2;
 						//console.log(el.scrollHeight, "-", el.scrollTop+el.clientHeight);
 					}
 
-				setMsgLog((l) => [...l, {type: data.type, name: "Anon", content: data.content}]); // Pass callback; this useEffect only runs once, thus only has access to initial values.
+				msgLog.push({type: data.type, name: "Anon", content: data.content}); // "setMsgLog([...msgLog, {}])" did not work.
+				setMsgLog([...msgLog]); // [...obj] makes Object.is() false & triggers rerender
+
 				break;
 			}
 		}
-		ws.current = WS;
 	}
 
 	useEffect(() => {
-		wsInit(ws.current);
+		wsInit();
 		return () => {
-			if (ws.current) {
-				ws.current.close(1000, "return");
-				ws.current = null;
+			if (ws) {
+				ws.close(1000, "return");
+				ws = null;
 			}
 		}
 		}, []);
@@ -103,15 +120,15 @@ export default function ChatWindow() {
 		if (divMain.current) {
 			const el = divMain.current
 			//if (firstLoad) {el.scrollTop = el.scrollHeight; firstLoad = false}
-			if (shouldScroll.current) el.scrollTop = el.scrollHeight; // False when scroll not at bottom
+			if (shouldScroll) el.scrollTop = el.scrollHeight; // False when scroll not at bottom
 		}
 	}, [msgLog]);
 
 	function handleForm(e:React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
-		if (ws.current && ws.current.readyState === ws.current.OPEN) {
-			ws.current.send(JSON.stringify(msg));
-			msg.content = "";
+		if (ws && ws.readyState === ws.OPEN) {
+			ws.send(JSON.stringify(msgInput));
+			msgInput.content = "";
 			e.currentTarget.querySelector("input")!.value = "";
 			//setMsgLog([...msgLog, {name: "Luk", content: msg}])
 			return
@@ -141,7 +158,7 @@ export default function ChatWindow() {
 			<div id="bot">
 				<img alt="toggle-bar" title="Toggle Bar" src="/icon/bar.svg"/>
 				<form onSubmit={handleForm}>
-					<input name="msg" type="text" onChange={e => msg.content = e.target.value}/>
+					<input name="msg" type="text" onChange={e => msgInput.content = e.target.value}/>
 					<button type="submit">Send!</button>
 				</form>
 			</div>

@@ -25,10 +25,10 @@ export default function Sidebar() {
 						<a className="active" href={`/chat/1`}>Friend1</a>
 					</li>
 					<li>
-						<a href={`/chat/2`}>Friend1, Friend2 ...</a>
+						<Link to={`/123`}>Friend1, Friend2 ...</Link>
 					</li>
 					<li>
-						<a href={`/chat/2`}>Group Name</a>
+						<Link to={`/456`}>Group Name</Link>
 					</li>
 				</ul>
 			</nav>

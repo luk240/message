@@ -22,6 +22,10 @@ const router = createBrowserRouter([
 				//loader: usersLoader | executed synchronously with authLoader (moved to useEffect)
 			},
 			{
+				path: ":thread",
+				element: <Index/>,
+			},
+			{
 				path: "profile",
 				element: <Profile/>,
 			}
