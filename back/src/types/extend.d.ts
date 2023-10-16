@@ -9,7 +9,17 @@ declare global {
 }
 
 declare module "ws" {
-	export interface WebSocket {
-		isAlive?: boolean;
+	interface WebSocket {
+		isAlive: boolean;
+		usr: {
+			id: string;
+			name: string;
+		}
 	}
+}
+
+declare module "http" {
+	interface IncomingMessage {
+			tok: {id:string, [k:string]: any}
+		}
 }

@@ -1,7 +1,7 @@
 import { makeApp } from "./app/app";
 import { dbConn } from "./db";
+import wsInit from "./app/ws";
 import dotenv from "dotenv";
-import wsInit from "./ws";
 
 dotenv.config(); // Load .env to procces.env
 dbConn();

@@ -6,13 +6,13 @@ interface WebSocket_ extends WebSocket {
 	pingTimeout: ReturnType<typeof setTimeout>;
 }
 interface WsGet {
-	type: string;
-	name: string;
+	type: "ping"|"sys"|"msg";
 	content: string;
+	name?: string;
 }
-interface WsSend extends WsGet {
-	user_id: string;
-	conversation_id: string;
+interface WsSend {
+	type: "msg";
+	content: string;
 }
 
 let ws:WebSocket_|null = null;
@@ -21,7 +21,7 @@ const msgInput:WsSend = {type: "msg"} as WsSend;
 let shouldScroll = true;
 
 export default function ChatWindow() {
-	let [msgLog, setMsgLog] = useState<WsGet[]>([{type: "msg", name: "XX", content: "XX"}]);
+	let [msgLog, setMsgLog] = useState<WsGet[]>([]);
 	const divMain = useRef<HTMLDivElement>(null);
 	const getThread = useParams().thread || "";
 	const thread = useRef(getThread);
@@ -59,8 +59,7 @@ export default function ChatWindow() {
 		ws.onopen = () => {
 			console.log("'WS connection open'");
 			heartbeat(false); // Start timeout in case conn drops before first ping(30s)
-			const sysMsg = {type: "sys", content: "{User} connected"};
-			ws!.send(JSON.stringify(sysMsg));
+			ws!.send('{"type":"sys"}'); // User connected msg
 		}
 		ws.onclose = (e) => {
 			console.log("WS onclose:", e.reason);
@@ -87,21 +86,21 @@ export default function ChatWindow() {
 				return;
 			}
 
-			switch(data.type) {
-				case "ping": // Wss sends ping on interval, we res with pong. If wss dont receive pong it kills us & if we dont get ping we reconn.
-					heartbeat();
-				break;
-				case "msg": case "sys":
-					if (divMain.current) { // Handle scroll befor setting msg
+
+			const x = data.type;
+			if (x == "ping") heartbeat(); // If wss dont receive pong it kills us & if we dont get ping we reconn.
+			else if (x == "msg" || x == "sys") {
+					if (divMain.current) { // Handle scroll before setting msg
 						const el = divMain.current;
 						shouldScroll = el.scrollHeight - (el.scrollTop+el.clientHeight) < 2;
 						//console.log(el.scrollHeight, "-", el.scrollTop+el.clientHeight);
 					}
 
-				msgLog.push({type: data.type, name: "Anon", content: data.content}); // "setMsgLog([...msgLog, {}])" did not work.
-				setMsgLog([...msgLog]); // [...obj] makes Object.is() false & triggers rerender
+					if (x == "msg") data.name = `[${data.name}]:`;
+					else data.content = `* ${data.content}`;
 
-				break;
+					msgLog.push({type: data.type, name: data.name, content: data.content}); // "setMsgLog([...msgLog, {}])" did not work.
+					setMsgLog([...msgLog]); // [...obj] makes Object.is() false & triggers rerender
 			}
 		}
 	}
@@ -130,7 +129,6 @@ export default function ChatWindow() {
 			ws.send(JSON.stringify(msgInput));
 			msgInput.content = "";
 			e.currentTarget.querySelector("input")!.value = "";
-			//setMsgLog([...msgLog, {name: "Luk", content: msg}])
 			return
 		}
 		alert("Connection not ready");
@@ -150,7 +148,7 @@ export default function ChatWindow() {
 					<p key={idx} style={{
 					background: api.user == login.user ? "cyan" : "gray"
 					}}>
-						{text.type == "msg" ? `${text.name}: ${text.content}`
+						{text.type == "msg" ? `${text.name} ${text.content}`
 						: text.type == "sys" && <i>{text.content}</i>}
 					</p>
 				)}</pre>

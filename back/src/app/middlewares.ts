@@ -1,9 +1,9 @@
 import {Request, Response, NextFunction } from "express";
+import { IncomingMessage } from "http";
 import { db } from "../db";
 import jwt from "jsonwebtoken";
 import { getCookies } from "./utils/cookie";
 import handleErr from "./utils/error";
-import { IncomingMessage } from "http";
 
 type M = (...args:[Request, Response, NextFunction]) => void;
 
@@ -47,6 +47,7 @@ function wsTokAuth(req:IncomingMessage) {
 			return tok = false;
 		}
 		console.log("WS_TOK_VERIFY", dTok);
+		req.tok = dTok as {id:string, iat: number, exp: number};
 		tok = true;
 	});
 
