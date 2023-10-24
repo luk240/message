@@ -4,7 +4,8 @@
   "description": "",
   "main": "app.ts",
   "scripts": {
-    "dev": "npx ts-node-dev --files --inspect -- ./src/server.ts"
+    "dev": "npx ts-node-dev --files --inspect -- ./src/server.ts",
+    "seed": "npx ts-node -T -- src/db_seed.ts"
   },
   "author": "",
   "license": "ISC",

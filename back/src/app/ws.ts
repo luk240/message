@@ -105,7 +105,7 @@ export default function wsInit(server:Server) {
 	// Add server to wss | HTTP handshake before upgrade
 	server.on("upgrade", (req, socket, head) => {
 		socket.on("error", socketPreErr);
-		console.log("ws handshake:", req.headers);
+		//console.log("ws handshake:", req.headers);
 
 		if (!wsTokAuth(req)) {
 			socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
@@ -121,7 +121,7 @@ export default function wsInit(server:Server) {
 }
 
 wss.on("connection", async (ws:WebSocket, req) => {
-	console.log("WS-client connected", req.url);
+	//console.log("WS-client connected", req.url);
 	ws.isAlive = true;
 	ws.on("error", socketPostErr);
 
@@ -138,7 +138,7 @@ wss.on("connection", async (ws:WebSocket, req) => {
 		const idx = req.url.indexOf("?"); // "/123/456?t=key"
 		const url = (idx !== -1) ? req.url.slice(0, idx) : req.url;
 		const paths = url.split("/").filter((p) => !!p); // ["",id,""]
-		console.log(paths);
+		//console.log("paths:", paths);
 		sendThread(ws, paths[0]);
 	}
 });

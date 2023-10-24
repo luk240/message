@@ -2,9 +2,11 @@ import { redirect } from "react-router-dom";
 
 const url = import.meta.env._API || "http://localhost:5000/"
 
+// USERS \\
+
 export function formPost(e:React.FormEvent<HTMLFormElement>, path:string) {
 	e.preventDefault();
-	const form = e.target as HTMLFormElement;
+	const form = e.currentTarget;
 	const field:NodeListOf<any> = form.querySelectorAll("[name]");
 	let body:{[k:string]: string|number} = {};
 
@@ -39,10 +41,25 @@ export async function getUsers() {
 			mode: "cors",
 			credentials: "include"
 		});
-		const data = await res.json(); // username
+		const data = await res.json();
 		return data;
 	}catch(e) {
 		console.log("AUTH ERR:", e);
+	}
+}
+
+export async function searchUsers(q:string) {
+	console.log("searchUsers");
+	try {
+		const res = await fetch(url+"user/search/"+q, {
+			method: "GET",
+			mode: "cors",
+			credentials: "include"
+		});
+		const data = await res.json();
+		return data;
+	}catch(e) {
+		console.log(e);
 	}
 }
 
@@ -61,7 +78,7 @@ export async function authLoader(cd:boolean = false) {
 		}
 
 		if (cd) return redirect("/"); // Fn is called again after redirect
-		return res.text(); // username
+		return res.json(); // user
 	}catch(e) {
 		console.log("tryCatch:", e);
 		if (cd) return null; // No redirect if on login/register
@@ -73,12 +90,39 @@ export function logout() {
 	return fetch(url+"user/logout", {mode: "cors", credentials: "include"});
 }
 
-export async function errLoader() {
-	console.log("errLoader");
-		const res = await fetch(url+"noexist", {
+// CONVO \\
+
+export async function convoGet() {
+	console.log("convoLoader");
+	try {
+		const res = await fetch(url+"convo/get", {
+			method: "GET",
+			mode: "cors",
 			credentials: "include"
 		});
-		console.log("RES:",res);
-		throw Error("This happens before bad res?");
-		return res;
+
+		if (!res.ok) return [];
+		const data = await res.json();
+
+		return data;
+	}catch(e) {
+		console.log(e);
+	}
+}
+
+export async function convoNew(uid:string) {
+	console.log("convoNew");
+	try {
+		const res = await fetch(url+"convo/new", {
+			method: "POST",
+			body: JSON.stringify({uid: uid}),
+			headers: {"Content-Type": "application/json"},
+			mode: "cors",
+			credentials: "include"
+		});
+		const data = await res.json();
+		return data;
+	}catch(e) {
+		console.log(e);
+	}
 }

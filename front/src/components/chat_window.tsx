@@ -133,6 +133,12 @@ export default function ChatWindow() {
 		}
 		alert("Connection not ready");
 	}
+
+	function tglBar() {
+		const x = document.getElementById("sidebar")!;
+		if (x.style.display != "none") x.style.display = "none";
+		else x.style.display = "flex";
+	}
 	
 	const api = {user:"luk"}
 	const login = {user:"luk"}
@@ -154,10 +160,10 @@ export default function ChatWindow() {
 				)}</pre>
 			</div>
 			<div id="bot">
-				<img alt="toggle-bar" title="Toggle Bar" src="/icon/bar.svg"/>
+				<img onClick={tglBar} tabIndex={0} alt="toggle-bar" title="Toggle Bar" src="/icon/bar.svg"/>
 				<form onSubmit={handleForm}>
 					<input name="msg" type="text" onChange={e => msgInput.content = e.target.value}/>
-					<button type="submit">Send!</button>
+					<button type="submit">{"->"}</button>
 				</form>
 			</div>
 		</main>

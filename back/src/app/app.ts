@@ -1,5 +1,6 @@
 import express from "express";
 import userRouter from "./user/user_router";
+import convoRouter from "./convo/convo_router";
 
 export function makeApp() {
 	const app = express();
@@ -13,7 +14,8 @@ export function makeApp() {
 		next();
 	});
 
-	app.use("/user", userRouter);
+	app.use("/user", userRouter)
+	.use("/convo", convoRouter);
 
 	app.get("/", (_, res) => {
 		res.send("Backend endpoint.");

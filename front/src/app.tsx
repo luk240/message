@@ -1,7 +1,14 @@
-import { Outlet } from "react-router-dom";
+import { createContext } from "react";
+import { Outlet, useLoaderData } from "react-router-dom";
+
+export const UserContext = createContext<null|Object>(null);
 
 export default function App() {
+	const user:any = useLoaderData();
+
 	return (
-		<Outlet/>
+		<UserContext.Provider value={user}>
+		{user && <Outlet/>}
+		</UserContext.Provider>
 	)
 }

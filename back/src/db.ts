@@ -5,10 +5,11 @@ const client = new MongoClient(uri);
 
 export let db:Db;
 
-export async function dbConn() {
-	await client.connect()
+function dbConn() {
+	client.connect()
 		.then(() => console.log(`DB connected: ${uri}`))
 		.catch(err => { console.log(`db.ts: ${err}`); process.exit(1) });
 	db = client.db("msg-app");
 	return client;
 }
+dbConn();

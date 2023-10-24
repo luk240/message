@@ -7,7 +7,7 @@ export function makeUser(name:string, email:string="", password:string): model.I
 		image: null,
 		state: {online: false, status: null}, // Handle in frontend
 		friends: [],
-		conversations: [],
+		convos: [],
 		time_created: Date.now(),
 		time_login: Date.now()
 	}

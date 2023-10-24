@@ -6,7 +6,7 @@ import Profile from "./pages/profile";
 import Index from "./pages";
 
 import { createBrowserRouter, RouterProvider, } from "react-router-dom";
-import { authLoader, errLoader } from "./utils/fetch";
+import { authLoader } from "./utils/fetch";
 
 const router = createBrowserRouter([
 	// Auth Routes
@@ -28,6 +28,10 @@ const router = createBrowserRouter([
 			{
 				path: "profile",
 				element: <Profile/>,
+			},
+			{
+				path: "friends",
+				element: <p>F</p>,
 			}
 		]
 	},

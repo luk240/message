@@ -3,7 +3,7 @@ import { makeUser } from "./user";
 import USER from "./user_dao";
 import handleErr from "../utils/error";
 import { authenticateTok, bodyIsString, valLogin, valReg } from "../middlewares";
-import { getCookies, setCookie } from "../utils/cookie";
+import { setCookie } from "../utils/cookie";
 import { genToken } from "../utils/token";
 
 const userRouter = Router();
@@ -48,8 +48,8 @@ userRouter.get("/logout", (_, res) => {
 
 userRouter.get("/auth", authenticateTok, async (req, res) => {
 	try{
-		const name = await USER.getUserName(req.tok.id);
-		res.status(200).send(name);
+		const user = await USER.getUser(req.tok.id); // uneeded?
+		res.status(200).send(user);
 	}catch(e) {
 		res.status(500).json({error: handleErr(e)});
 	}
@@ -64,15 +64,21 @@ userRouter.get("/users", authenticateTok, async (_, res) => {
 	}
 });
 
-
-userRouter.get("/setcok", (_, res) => {
-	setCookie("myCookie", "pingu", res);
-	res.end("Cookie SET")
+userRouter.get("/:uid", authenticateTok, async (req, res) => {
+	try {
+		const user = await USER.getUser(req.tok.id);
+		res.json(user);
+	} catch(e:any) {
+		res.status(500).json({error: handleErr(e)});
+	}
 });
-userRouter.get("/setcok1", (req, res) => {
-	if (req.headers.cookie) {
-		const cookies = getCookies<{tok:string}>(req.headers.cookie)
-		res.json(cookies)
+
+userRouter.get("/search/:exp", authenticateTok, async (req, res) => {
+	try {
+		const users = await USER.searchUsers(req.tok.id, req.params.exp);
+		res.json(users);
+	} catch(e:any) {
+		res.status(500).json({error: handleErr(e)});
 	}
 });
 
