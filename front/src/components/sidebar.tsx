@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import "./sidebar.css";
 import { convoGet, searchUsers } from "../utils/fetch";
 import { useEffect, useState } from "react";
@@ -24,7 +24,7 @@ export default function Sidebar() {
 		if (/[^a-z0-9.-_]/.test(input)) return "Invalid name";
 
 		input.replace(/\./g, "\\.");
-		const r = new RegExp(`^.?.?${input}.*`, "i");
+		const r = new RegExp(`.?.?${input}.*`, "i");
 		const res = convos.filter(u => r.test(u.name));
 
 		console.log(res);
@@ -83,10 +83,10 @@ export default function Sidebar() {
 				<ul>
 				{shownConvos.map(c => (
 					<li key={c.cid}>
-						<Link to={`/${c.cid}`}>
+						<NavLink to={`/${c.cid}`}>
 							<span>{c.name}</span>
 							<span>{c.friend && "F"}</span>
-						</Link>
+						</NavLink>
 					</li>
 				))}
 				</ul>

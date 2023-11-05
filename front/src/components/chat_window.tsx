@@ -1,14 +1,18 @@
 import { useEffect, useState, useRef } from "react"
 import "./chat_window.css"
-import { useLocation, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { msgGetC } from "../utils/fetch";
+import { mdm } from "../utils/fmt_date";
 
 interface WebSocket_ extends WebSocket {
 	pingTimeout: ReturnType<typeof setTimeout>;
 }
 interface WsGet {
+	id?: "string";
 	type: "ping"|"sys"|"msg";
 	content: string;
 	name?: string;
+	time_created?: number; // From client
 }
 interface WsSend {
 	type: "msg";
@@ -38,7 +42,7 @@ export default function ChatWindow() {
 		if (ws.pingTimeout) clearTimeout(ws.pingTimeout);
 
 		ws.pingTimeout = setTimeout(() => { // Logic to handle no res from server
-			ws!.close(1000, "timeout"); // Try reconn once before 1min interval
+			ws?.close(1000, "timeout"); // Try reconn once before 1min interval
 			
 			const reconn = setInterval(() => {
 				if (ws?.readyState != ws?.OPEN) {
@@ -66,9 +70,12 @@ export default function ChatWindow() {
 			if (ws) {
 				clearTimeout(ws.pingTimeout);
 				switch(e.reason) {
-					case "newid": msgLog = [];
-					case "newid": case "timeout":
-						wsInit(); break;
+					case "timeout": wsInit(); break;
+					case "newid": msgGetC(thread.current).then((data) => {
+						msgLog = data;
+						wsInit();
+					});
+					break;
 				}
 			}
 		}
@@ -86,27 +93,26 @@ export default function ChatWindow() {
 				return;
 			}
 
-
 			const x = data.type;
 			if (x == "ping") heartbeat(); // If wss dont receive pong it kills us & if we dont get ping we reconn.
 			else if (x == "msg" || x == "sys") {
-					if (divMain.current) { // Handle scroll before setting msg
-						const el = divMain.current;
-						shouldScroll = el.scrollHeight - (el.scrollTop+el.clientHeight) < 2;
-						//console.log(el.scrollHeight, "-", el.scrollTop+el.clientHeight);
-					}
+				if (divMain.current) { // Handle scroll before setting msg
+					const el = divMain.current;
+					shouldScroll = el.scrollHeight - (el.scrollTop+el.clientHeight) < 2;
+					//console.log(el.scrollHeight, "-", el.scrollTop+el.clientHeight);
+				}
 
-					if (x == "msg") data.name = `[${data.name}]:`;
-					else data.content = `* ${data.content}`;
-
-					msgLog.push({type: data.type, name: data.name, content: data.content}); // "setMsgLog([...msgLog, {}])" did not work.
-					setMsgLog([...msgLog]); // [...obj] makes Object.is() false & triggers rerender
+				msgLog.push({...data, time_created: Date.now()}); // "setMsgLog([...msgLog, {}])" did not work.
+				setMsgLog([...msgLog]); // [...obj] makes Object.is() false & triggers rerender
 			}
 		}
 	}
 
 	useEffect(() => {
-		wsInit();
+		msgGetC(thread.current).then((data) => {
+			msgLog = data;
+			wsInit();
+		});
 		return () => {
 			if (ws) {
 				ws.close(1000, "return");
@@ -150,12 +156,12 @@ export default function ChatWindow() {
 			</div>
 			<div id="mid" ref={divMain}>
 				<p>Messages displays here...</p>
-				<pre id="msg-box">{msgLog.map((text, idx) =>
+				<pre id="msg-box">{msgLog.map((m, idx) =>
 					<p key={idx} style={{
 					background: api.user == login.user ? "cyan" : "gray"
 					}}>
-						{text.type == "msg" ? `${text.name} ${text.content}`
-						: text.type == "sys" && <i>{text.content}</i>}
+						{m.type == "msg" ? `${mdm(new Date(m.time_created!))} ${m.name}: ${m.content}`
+						: m.type == "sys" && <i>* {m.content}</i>}
 					</p>
 				)}</pre>
 			</div>

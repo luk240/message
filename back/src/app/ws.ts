@@ -3,6 +3,8 @@ import { RawData, WebSocket, WebSocketServer } from "ws";
 import { WsGet, WsSend } from "../types/index";
 import { wsTokAuth } from "../app/middlewares";
 import USER from "./user/user_dao";
+import MSG from "./message/msg_dao";
+import { ObjectId } from "mongodb";
 
 const wss = new WebSocketServer({noServer: true});
 const heartbeat = 30000;
@@ -28,7 +30,7 @@ function ping(ws:WebSocket) {
 	ws.send(JSON.stringify({type: "ping"}), {binary: false})
 }
 
-function handleMessage(ws:WebSocket, rData:RawData) {
+function handleMessage(ws:WebSocket, rData:RawData, threadId?:string) {
 	try {
 		console.log("WS-client:", rData.toString());
 		var data:WsGet = JSON.parse(rData.toString());
@@ -37,14 +39,19 @@ function handleMessage(ws:WebSocket, rData:RawData) {
 		console.log("WS-onmessage invalid:", err);
 		return false;
 	}
-	
+
+
 	switch(data.type) {
 		case "pong":
 			ws.isAlive = true;
 			return false;
 		case "msg":
-			(data as WsSend).name = ws.usr.name;
-			return JSON.stringify(data);
+			if (!data.content) return false;
+			const data_ = data as WsSend
+			data_.name = ws.usr.name;
+			data_.id = new ObjectId();
+			if (threadId) MSG.storeMsg(threadId, ws.usr.id, data_.content, data_.id);
+			return JSON.stringify(data_);
 		case "sys":
 			return JSON.stringify({type: "sys", content: `${ws.usr.name} connected`});
 		default:
@@ -75,7 +82,7 @@ function sendThread(ws:WebSocket, threadId: string) {
 	else threads[threadId].push(ws);
 
 	ws.on("message", (rData, isBinary) => {
-		const data = handleMessage(ws, rData);
+		const data = handleMessage(ws, rData, threadId);
 		if (!data) return;
 
 		threads[threadId].forEach((c) => {

@@ -22,8 +22,8 @@ declare global {
 		}
 		interface IMessage {
 			_id?: ObjectId;
-			convo_id: string;
-			user_id: string;
+			convo_id: ObjectId;
+			user_id: ObjectId;
 			content: string;
 			time_created: number; // Date.now()
 		}
@@ -35,7 +35,8 @@ export interface WsGet {
 	content?: string; // Text Or Img
 }
 export interface WsSend {
-	type: "ping"|"sys"|"msg";
+	id?: ObjectId;
+	type: "sys"|"msg";
 	content: string;
 	name?: string;
 }

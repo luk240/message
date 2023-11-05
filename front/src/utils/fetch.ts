@@ -93,7 +93,7 @@ export function logout() {
 // CONVO \\
 
 export async function convoGet() {
-	console.log("convoLoader");
+	console.log("convoGet");
 	try {
 		const res = await fetch(url+"convo/get", {
 			method: "GET",
@@ -121,6 +121,26 @@ export async function convoNew(uid:string) {
 			credentials: "include"
 		});
 		const data = await res.json();
+		return data;
+	}catch(e) {
+		console.log(e);
+	}
+}
+
+// MSG \\
+
+export async function msgGetC(cid:string) {
+	console.log("msgGetC");
+	try {
+		const res = await fetch(url+"msg/c/"+cid, {
+			method: "GET",
+			mode: "cors",
+			credentials: "include"
+		});
+
+		if (!res.ok) return [];
+		const data = await res.json();
+
 		return data;
 	}catch(e) {
 		console.log(e);

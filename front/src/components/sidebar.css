@@ -67,6 +67,7 @@
 #sidebar nav a.active {
 	background: #80a0ff;
 	color: white;
+	font-weight: bold;
 }
 
 /* Popup */
