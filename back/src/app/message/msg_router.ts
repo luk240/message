@@ -15,4 +15,13 @@ msgRouter.get("/c/:cid", async (req, res) => {
 	}
 });
 
+msgRouter.delete("/", async (req, res) => {
+	try{
+		await MSG.rmMsg(req.tok.id, req.body.mId);
+		res.sendStatus(200);
+	}catch(e) {
+		res.status(500).json({error: handleErr(e)});
+	}
+});
+
 export default msgRouter;

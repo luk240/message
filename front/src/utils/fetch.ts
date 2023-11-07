@@ -146,3 +146,20 @@ export async function msgGetC(cid:string) {
 		console.log(e);
 	}
 }
+
+export async function msgRm(mId:string) {
+	console.log("msgGetC", mId);
+	try {
+		const res = await fetch(url+"msg", {
+			method: "DELETE",
+			body: JSON.stringify({mId: mId}),
+			headers: {"Content-Type": "application/json"},
+			mode: "cors",
+			credentials: "include"
+		});
+	if (res.ok) return true;
+
+	}catch(e) {
+		console.log(e);
+	}
+}

@@ -1,8 +1,9 @@
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useContext } from "react"
 import "./chat_window.css"
 import { useParams } from "react-router-dom";
-import { msgGetC } from "../utils/fetch";
+import { msgGetC, msgRm } from "../utils/fetch";
 import { mdm } from "../utils/fmt_date";
+import { UserContext } from "../app";
 
 interface WebSocket_ extends WebSocket {
 	pingTimeout: ReturnType<typeof setTimeout>;
@@ -25,6 +26,7 @@ const msgInput:WsSend = {type: "msg"} as WsSend;
 let shouldScroll = true;
 
 export default function ChatWindow() {
+	const user = useContext(UserContext);
 	let [msgLog, setMsgLog] = useState<WsGet[]>([]);
 	const divMain = useRef<HTMLDivElement>(null);
 	const getThread = useParams().thread || "";
@@ -72,7 +74,7 @@ export default function ChatWindow() {
 				switch(e.reason) {
 					case "timeout": wsInit(); break;
 					case "newid": msgGetC(thread.current).then((data) => {
-						msgLog = data;
+						setMsgLog(data);
 						wsInit();
 					});
 					break;
@@ -102,15 +104,16 @@ export default function ChatWindow() {
 					//console.log(el.scrollHeight, "-", el.scrollTop+el.clientHeight);
 				}
 
-				msgLog.push({...data, time_created: Date.now()}); // "setMsgLog([...msgLog, {}])" did not work.
-				setMsgLog([...msgLog]); // [...obj] makes Object.is() false & triggers rerender
+				const push = {...data, time_created: Date.now()}
+				setMsgLog((ml) => [...ml, push]); // [...obj] makes Object.is() false & triggers rerender
 			}
 		}
 	}
 
 	useEffect(() => {
 		msgGetC(thread.current).then((data) => {
-			msgLog = data;
+			//msgLog = data;
+			setMsgLog(data);
 			wsInit();
 		});
 		return () => {
@@ -135,7 +138,7 @@ export default function ChatWindow() {
 			ws.send(JSON.stringify(msgInput));
 			msgInput.content = "";
 			e.currentTarget.querySelector("input")!.value = "";
-			return
+			return;
 		}
 		alert("Connection not ready");
 	}
@@ -145,9 +148,19 @@ export default function ChatWindow() {
 		if (x.style.display != "none") x.style.display = "none";
 		else x.style.display = "flex";
 	}
+
+	function msgRm_(id:string) {
+		if (!id) return;
+		msgRm(id).then(res => {
+			if (!res) return;
+			msgLog.forEach((i, idx) => {
+				if (i.id && i.id == id) msgLog.splice(idx, 1);
+			});
+			shouldScroll = false;
+			setMsgLog([...msgLog]);
+		});
+	}
 	
-	const api = {user:"luk"}
-	const login = {user:"luk"}
 	return (
 		<main id="chat">
 			<div id="top">
@@ -157,12 +170,14 @@ export default function ChatWindow() {
 			<div id="mid" ref={divMain}>
 				<p>Messages displays here...</p>
 				<pre id="msg-box">{msgLog.map((m, idx) =>
-					<p key={idx} style={{
-					background: api.user == login.user ? "cyan" : "gray"
-					}}>
-						{m.type == "msg" ? `${mdm(new Date(m.time_created!))} ${m.name}: ${m.content}`
-						: m.type == "sys" && <i>* {m.content}</i>}
+				m.type == "msg" ?
+					<p key={idx}>
+						<span>{mdm(new Date(m.time_created!))}</span>&nbsp;
+						<span className={user.name == m.name ? "me" : ""}>{m.name}</span>
+						:&nbsp;{m.content}
+						{user.name == m.name && <span className="rm" onClick={() => msgRm_(m.id!)}>Remove</span>}
 					</p>
+				:	<p key={idx}><i>* {m.content}</i></p>
 				)}</pre>
 			</div>
 			<div id="bot">

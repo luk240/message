@@ -28,6 +28,20 @@ main > #mid pre {
 	white-space: pre-wrap;
 	overflow-wrap: anywhere;
 }
+main > #mid pre p{
+	position: relative;
+}
+main > #mid pre p span.me{
+	font-weight: bold;
+}
+main > #mid pre p span.rm{
+	display: none;
+	position: absolute;
+	right:10px;
+	cursor: pointer;
+	color: crimson;
+}
+main > #mid pre p:hover span.rm {display: inline}
 main > #bot {
 	position: relative;
 	margin: 0.5rem 0.5rem 0.3rem 0.5rem;

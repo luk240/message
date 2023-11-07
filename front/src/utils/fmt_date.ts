@@ -3,7 +3,7 @@ const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep
 export function mdm(d:Date) {
 	const [dMonth, dDay, dHours, dMinutes] = [
 		d.getMonth(),
-		d.getDate(),
+		(d.getDate() + " ").slice(0,2),
 		("0" + d.getHours()).slice(-2),
 		("0" + d.getMinutes()).slice(-2),
 	];

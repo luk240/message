@@ -53,6 +53,16 @@ class MsgDao implements IMessageDao {
 		//console.log(namedMsgs);
 		return namedMsgs as WsSend[] & {time_created: number};
 	}
+
+	async rmMsg(uId:string, mId:string) {
+		if (!ObjectId.isValid(mId)) throw Error("Invalid id");
+
+		const mIdDb = await this.db.findOne({_id: new ObjectId(mId)}, { projection: {user_id: 1} });
+		if (!mIdDb || mIdDb.user_id.toString() !== uId) throw Error("Denied");
+
+		const res = await this.db.deleteOne({_id: new ObjectId(mId)});
+		if (!res.acknowledged) throw Error("Deletion failed");
+	}
 }
 
 export default new MsgDao();
