@@ -86,7 +86,6 @@
 	position: relative;
 	width: 95%;
 	height: 100%;
-	box-sizing: border-box;
 	margin: 0 auto;
 	padding: 0.6rem;
 	border-radius: 1rem;
@@ -152,7 +151,6 @@
 	grid-auto-rows: 33.3%;
 	justify-items: center;
 	flex-wrap: wrap;
-	box-sizing: border-box;
 	padding-top: 0.6rem;
 	height: calc(100% - 2rem); /* 2rem? */
 	overflow-y: scroll;

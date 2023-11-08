@@ -1,0 +1,38 @@
+#logreg:before {
+	content: "Message";
+	position: fixed;
+	inset: 0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: -1;
+	height: 100%;
+	transform: skew(15deg,-10deg);
+	font-size: 10rem;
+	color: rgba(0,0,0,0.2)
+}
+#logreg {
+	transform: translateY(-20%);
+	position: absolute;
+	inset: 0;
+	margin: auto;
+	padding: 1rem;
+	border-radius: 5px;
+	max-width: 300px;
+	height: fit-content;
+	background: rgba(250,250,250,0.4)
+}
+#logreg > h1 {text-align: center;}
+#logreg input, button {margin-bottom: 0.4rem;}
+#logreg input {
+	margin-top: 0.2rem;
+	width: 100%;
+	background: rgba(250,250,250,0.9)
+}
+#logreg > p {text-align: center;}
+#logreg .form-err {
+	margin-top: 10px;
+	padding: 4px;
+	border-radius: 5px;
+	background: #da3157;
+}

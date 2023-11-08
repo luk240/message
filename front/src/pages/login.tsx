@@ -17,7 +17,7 @@ export default function Login() {
 	}
 
 	return (
-		<div>
+		<div id="logreg">
 			{window.location.search == "?~" && <p>You must first login.</p>}
 			{window.location.search == "?y" && <p>Successfully logged out.</p>}
 			<h1>Login</h1>
@@ -26,13 +26,15 @@ export default function Login() {
 					<input name="cred" type="text" placeholder="Username/Email"/>
 				</label>
 				<label>Password:
-					<input name="password" type="text" placeholder="Password"/>
+					<input name="password" type="password" placeholder="Password"/>
 				</label>
 				<Button type="submit">Login!</Button>
 			</form>
 			<p>Dont have an account? <Link to="/Register">Register.</Link></p>
-			{err && ((typeof err == "string") ? <div><p>{err}</p></div> : err.length>0 &&
-				<div className="form-err">{ err.map((e, idx) => <p key={idx}>{e}</p>) }</div>)}
+			{err && <div className="form-err">
+				{ typeof err == "string" ? <p>{err}</p> : err.length>0 &&
+				err.map((e, idx) => <p key={idx}>{e}</p>) }
+			</div>}
 		</div>
 	)
 }

@@ -3,7 +3,6 @@ import Button from "../components/button";
 import { formPost } from "../utils/fetch";
 import { useState } from "react";
 
-
 export default function Register() {
 	const navigate = useNavigate();
 	const [err, setErr] = useState<string[]|string|null>(null);
@@ -18,7 +17,7 @@ export default function Register() {
 	}
 
 	return (
-		<div>
+		<div id="logreg">
 			<h1>Register</h1>
 			<form onSubmit={handleSubmit}>
 				<label>Username:
@@ -28,13 +27,15 @@ export default function Register() {
 					<input name="email" type="text" placeholder="Email"/>
 				</label>
 				<label>Password:
-					<input name="password" type="text" placeholder="Password"/>
+					<input name="password" type="password" placeholder="Password"/>
 				</label>
 				<Button type="submit">Register!</Button>
 			</form>
 			<p>Already registered? <Link to="/login">Login.</Link></p>
-			{err && ((typeof err == "string") ? <div><p>{err}</p></div> : err.length>0 &&
-				<div className="form-err">{ err.map((e, idx) => <p key={idx}>{e}</p>) }</div>)}
+			{err && <div className="form-err">
+				{ typeof err == "string" ? <p>{err}</p> : err.length>0 &&
+				err.map((e, idx) => <p key={idx}>{e}</p>) }
+			</div>}
 		</div>
 	)
 }
